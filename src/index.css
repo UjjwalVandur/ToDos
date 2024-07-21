@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* body{
+    --tw-bg-opacity: 1;
+    background-color: rgba(187, 187, 255, 0.87);
+} */
+
+body{
+    z-index: -1;
+    /* opacity: 80%; */
+    width: 100vw;
+    height: 100vh;
+    background-image: url(./public/background.jpg);
+    background-size: cover; /* or 'contain' */
+    background-position: center; /* or other values */
+    background-repeat: no-repeat; /* or other values */
+}
