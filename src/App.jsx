@@ -5,6 +5,8 @@ import Navbar from './components/Navbar'
 import { v4 as uuidv4 } from 'uuid';
 import { FaEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
+import axios from 'axios';
+
 
 
 function App() {
@@ -14,18 +16,22 @@ function App() {
   
 
   useEffect(() => {
-    let todoString = localStorage.getItem("todos")
-    if(todoString){
+    fetchTodos();
+  }, []);
 
-      let todos = JSON.parse(localStorage.getItem("todos"))
-      setTodos(todos)
+  const fetchTodos = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/todos');
+      setTodos(response.data);
+    } catch (error) {
+      console.error("There was an error fetching the todos!", error);
     }
-  }, [])
-  
+  };
 
-  const saveToLs = (params) => {
-    localStorage.setItem("todos",JSON.stringify(todos))
-  }
+  const saveToDb = async (newTodos) => {
+    setTodos(newTodos);
+    await axios.post('http://localhost:5000/todos', newTodos[newTodos.length - 1]);
+  };
   
   const toggleFinished = (e) => {
     setshowFinished(!showFinished)
@@ -33,45 +39,40 @@ function App() {
   
 
   const handleEdit = (e, id) => {
-    let t=todos.filter(i=>i.id === id)
-    setTodo(t[0].todo)
-    let newTodos = todos.filter(item => {
-      return item.id !== id
-    });
-    setTodos(newTodos)
-    saveToLs()
-  }
-  const handleDelete = (e, id) => {
-    let index = todos.findIndex(item => {
-      return item.id === id;
-    })
-    let newTodos = todos.filter(item => {
-      return item.id !== id
-    });
-    setTodos(newTodos)
-    saveToLs()
-  }
+    const t = todos.find(i => i.id === id);
+    setTodo(t.todo);
+    const newTodos = todos.filter(item => item.id !== id);
+    setTodos(newTodos);
+    axios.put(`http://localhost:5000/todos/${id}`, { todo });
+  };
+  
+  const handleDelete = async (e, id) => {
+    const newTodos = todos.filter(item => item.id !== id);
+    setTodos(newTodos);
+    await axios.delete(`http://localhost:5000/todos/${id}`);
+  };
+  
 
-  const handleAdd = () => {
-    setTodos([...todos, { id: uuidv4(), todo, isCompleted: false }])
-    setTodo("")
-    console.log(todos)
-    saveToLs()
-  }
+  const handleAdd = async () => {
+    const newTodo = { id: uuidv4(), todo, isCompleted: false };
+    const newTodos = [...todos, newTodo];
+    await saveToDb(newTodos);
+    setTodo("");
+  };
+  
   const handleChange = (e) => {
     setTodo(e.target.value)
-    saveToLs()
   }
 
-  const handleCheckbox = (e) => {
-    let id = e.target.name;
-    let index = todos.findIndex(item => {
-      return item.id === id;
-    })
-    let newTodos = [...todos];
+  const handleCheckbox = async (e) => {
+    const id = e.target.name;
+    const index = todos.findIndex(item => item.id === id);
+    const newTodos = [...todos];
     newTodos[index].isCompleted = !newTodos[index].isCompleted;
-    setTodos(newTodos)
-  }
+    setTodos(newTodos);
+    await axios.put(`http://localhost:5000/todos/${id}`, newTodos[index]);
+  };
+  
 
 
   return (
